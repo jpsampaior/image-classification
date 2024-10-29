@@ -5,6 +5,8 @@ from torchvision.models import resnet18
 from torch.utils.data import DataLoader
 import torch.nn as nn
 
+# This is Alexis hi!
+
 # Prepare to use ResNet-18 (Resize and normalize)
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
