@@ -5,6 +5,7 @@ from collections import defaultdict
 from torchvision.models import resnet18
 from torch.utils.data import DataLoader
 import torch.nn as nn
+from sklearn.decomposition import PCA
 
 
 # Prepare to use ResNet-18 (Resize and normalize)
@@ -77,3 +78,11 @@ val_features = extract_features(val_loader)
 print("Training features shape:", train_features.shape)
 print("Validation features shape:", val_features.shape)
 
+# Apply PCA to reduce the size of feature vectors from 512×1 50×1
+pca = PCA(n_components=50)
+train_features_pca = pca.fit_transform(train_features)
+val_features_pca = pca.transform(val_features)
+
+# Verify features size after PCA
+print("Training features shape after PCA:", train_features_pca.shape)
+print("Validation features shape after PCA:", val_features_pca.shape)
