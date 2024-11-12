@@ -55,8 +55,8 @@ model.fc = nn.Identity()  # Replace the last layer with an identity layer
 model.eval()  # Question: Why do that?
 
 # Question: Why do that?
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#model.to(device)
 
 
 # Feature extraction function
