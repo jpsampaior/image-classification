@@ -3,6 +3,8 @@ import numpy as np
 from gaussian_naive_bayes import GaussianNaiveBayes
 
 
+# hello test
+
 def main():
     extractor = FeatureExtractor()
     train_features_pca, val_features_pca = extractor.process()
