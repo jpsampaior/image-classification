@@ -1,9 +1,9 @@
 from feature_extractor import FeatureExtractor
 import numpy as np
 from gaussian_naive_bayes import GaussianNaiveBayes
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
 
-
-# hello test
 
 def main():
     extractor = FeatureExtractor()
@@ -19,6 +19,13 @@ def main():
 
     accuracy = np.mean(val_predictions == val_labels)
     print("Naive Bayes Accuracy:", accuracy)
+
+    sklearn_gnb = GaussianNB()
+    sklearn_gnb.fit(train_features_pca, train_labels)
+    sklearn_val_predictions = sklearn_gnb.predict(val_features_pca)
+
+    sklearn_accuracy = accuracy_score(val_labels, sklearn_val_predictions)
+    print("Scikit-learn Naive Bayes Accuracy:", sklearn_accuracy)
 
 
 if __name__ == "__main__":

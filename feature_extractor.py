@@ -8,11 +8,8 @@ import torch.nn as nn
 from sklearn.decomposition import PCA
 
 
-# The exercise ask us to do only a limited number of image per class, so this method do that
 def filter_by_class_limit(dataset, class_limit):
-    # filtered_data stores images and their labels, but only up to class_limit images per label.
     filtered_data = []
-    # defaultdict(int) automatically initializes missing keys with the default value of 0.
     class_counts = defaultdict(int)
     for img, label in dataset:
         if class_counts[label] < class_limit:
@@ -24,8 +21,6 @@ def filter_by_class_limit(dataset, class_limit):
 
 
 class FeatureExtractor:
-    # class limit is the number of images per class (we can define that, but by default is what the question ask)
-    # batch size is the number of samples the model processes at a time. It saves memory and speeds up training.
     def __init__(self, train_class_limit=500, val_class_limit=100, batch_size=32, pca_components=50):
         self.train_class_limit = train_class_limit
         self.val_class_limit = val_class_limit
@@ -38,7 +33,6 @@ class FeatureExtractor:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
-        # the root is where the images will be downloaded
         self.train_data = torchvision.datasets.CIFAR10(root="./data", train=True, download=True,
                                                        transform=self.transform)
         self.val_data = torchvision.datasets.CIFAR10(root="./data", train=False, download=True,
@@ -47,9 +41,6 @@ class FeatureExtractor:
         self.filtered_train_data = filter_by_class_limit(self.train_data, self.train_class_limit)
         self.filtered_val_data = filter_by_class_limit(self.val_data, self.val_class_limit)
 
-        # We are creating loaders to feed data to the model in batches.
-        # train_loader: Loads training data in random order (shuffle=True).
-        # val_loader: Loads validation data in order (shuffle=False).
         self.train_loader = DataLoader(self.filtered_train_data, batch_size=self.batch_size, shuffle=True)
         self.val_loader = DataLoader(self.filtered_val_data, batch_size=self.batch_size, shuffle=False)
 
@@ -57,7 +48,6 @@ class FeatureExtractor:
         self.model.fc = nn.Identity()
         self.model.eval()
 
-    # here we will use the resnet18 to extract the features from the images
     def extract_features(self, data_loader):
         features = []
         with torch.no_grad():
@@ -65,13 +55,10 @@ class FeatureExtractor:
                 features.append(self.model(imgs))
         return torch.cat(features)
 
-    # to them reduce the size of with pca
     def apply_pca(self, features):
         pca = PCA(n_components=self.pca_components)
         return pca.fit_transform(features)
 
-    # here we call all the methods and then return the features
-    # features are the information that the model need to try to identificate the image
     def process(self):
         train_features = self.extract_features(self.train_loader)
         val_features = self.extract_features(self.val_loader)
