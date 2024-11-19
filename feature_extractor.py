@@ -6,6 +6,7 @@ from torchvision.models import resnet18
 from torch.utils.data import DataLoader
 import torch.nn as nn
 from sklearn.decomposition import PCA
+from tqdm import tqdm
 
 
 def filter_by_class_limit(dataset, class_limit):
@@ -60,7 +61,7 @@ class FeatureExtractor:
     def extract_features(self, data_loader):
         features = []
         with torch.no_grad():
-            for imgs, _ in data_loader:
+            for imgs, _ in tqdm(data_loader, desc="Extracting Features"):
                 features.append(self.model(imgs))
         return torch.cat(features)  # Concatenating the multiple batches
 

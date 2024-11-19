@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score
 
 
 def main():
-    extractor = FeatureExtractor()
+    extractor = FeatureExtractor(train_class_limit=10, test_class_limit=5)
     train_features_pca, test_features_pca = extractor.process()
 
     train_labels = np.array([label for _, label in extractor.filtered_train_data])
