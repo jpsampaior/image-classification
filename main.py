@@ -7,7 +7,6 @@ from sklearn.metrics import accuracy_score
 
 
 def main():
-    
     extractor = FeatureExtractor()
     train_features_pca, test_features_pca = extractor.process()
 
