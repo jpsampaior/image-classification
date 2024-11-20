@@ -3,9 +3,11 @@ import numpy as np
 from gaussian_naive_bayes import GaussianNaiveBayes
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
+#from decision_tree_classifier import DecitionTreeClassifier, DecitionTreeNode
 
 
 def main():
+    
     extractor = FeatureExtractor()
     train_features_pca, test_features_pca = extractor.process()
 
@@ -28,6 +30,9 @@ def main():
 
     sklearn_accuracy = accuracy_score(test_labels, sklearn_test_predictions)
     print("Scikit-learn Naive Bayes Accuracy:", sklearn_accuracy)
+    
+
+    print(train_labels)
 
 
 if __name__ == "__main__":
