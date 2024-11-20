@@ -1,5 +1,5 @@
 import numpy as np
-from feature_extractor import FeatureExtractor as cifar10
+#from feature_extractor import FeatureExtractor as cifar10
 
 
 class DecitionTreeNode():
