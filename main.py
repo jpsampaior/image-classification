@@ -6,26 +6,26 @@ from sklearn.metrics import accuracy_score
 
 
 def main():
-    extractor = FeatureExtractor(train_class_limit=10, test_class_limit=5)
-    train_features_pca, test_features_pca = extractor.process()
+    extractor = FeatureExtractor()
+    train_features_pca, train_labels, test_features_pca, test_labels = extractor.process()
 
-    train_labels = np.array([label for _, label in extractor.filtered_train_data])
-    test_labels = np.array([label for _, label in extractor.filtered_test_data])
+    train_features_pca = np.array(train_features_pca)
+    test_features_pca = np.array(test_features_pca)
+    train_labels = train_labels.detach().cpu().numpy()
+    test_labels = test_labels.detach().cpu().numpy()
 
     print("\nStarting the training process (Custom GNB)...")
     gnb = GaussianNaiveBayes()
     gnb.train_model(train_features_pca, train_labels)
-
     test_predictions = gnb.predict(test_features_pca)
-
+    test_predictions = np.array(test_predictions)
     accuracy = np.mean(test_predictions == test_labels)
     print("Custom Naive Bayes Accuracy:", accuracy)
 
-    print("\n Starting the training process (Scikit GNB)...")
+    print("\nStarting the training process (Scikit GNB)...")
     sklearn_gnb = GaussianNB()
     sklearn_gnb.fit(train_features_pca, train_labels)
     sklearn_test_predictions = sklearn_gnb.predict(test_features_pca)
-
     sklearn_accuracy = accuracy_score(test_labels, sklearn_test_predictions)
     print("Scikit-learn Naive Bayes Accuracy:", sklearn_accuracy)
 

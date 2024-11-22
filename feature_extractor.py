@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 from sklearn.decomposition import PCA
 from tqdm import tqdm
+from sklearn.preprocessing import StandardScaler
 
 
 def filter_by_class_limit(dataset, class_limit):
@@ -31,15 +32,14 @@ class FeatureExtractor:
         # Prepare to resize images to 224x224x3
         self.transform = transforms.Compose([
             transforms.Resize((224, 224)),
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
         # Load dataset (CIFAR10) using the resize option
-        self.train_data = torchvision.datasets.CIFAR10(root="./data", train=True, download=True,
-                                                       transform=self.transform)
-        self.test_data = torchvision.datasets.CIFAR10(root="./data", train=False, download=True,
-                                                     transform=self.transform)
+        self.train_data = torchvision.datasets.CIFAR10(root="./data", train=True, download=True, transform=self.transform)
+        self.test_data = torchvision.datasets.CIFAR10(root="./data", train=False, download=True, transform=self.transform)
 
         # Filter the data to get 500 training images (50 of each class) and 100 test images (10 of each class)
         print(f"\nFiltering data to get {train_class_limit*10} training images and {test_class_limit*10} testing images...")
@@ -49,23 +49,39 @@ class FeatureExtractor:
         print("Number of test images:", len(self.filtered_test_data))
 
         # Creating dataloaders
-        self.train_loader = DataLoader(self.filtered_train_data, batch_size=self.batch_size, shuffle=True)
-        self.test_loader = DataLoader(self.filtered_test_data, batch_size=self.batch_size, shuffle=False)
+        self.train_loader = DataLoader(self.filtered_train_data, batch_size=self.batch_size, shuffle=True, pin_memory=True)
+        self.test_loader = DataLoader(self.filtered_test_data, batch_size=self.batch_size, shuffle=False, pin_memory=True)
 
-        # Initializing the Resnet18 Model to extract the features vectors
-        self.model = resnet18()
-        self.model.fc = nn.Identity()  # Remove the last layer of Resnet18
+        # Initializing ResNet18 Model to extract the feature vectors
+        self.model = resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
+        self.model = nn.Sequential(*list(self.model.children())[:-1])  # Remove the last layer
         self.model.eval()
 
-    # Function used to extract the features
-    def extract_features(self, data_loader):
-        features = []
-        with torch.no_grad():
-            for imgs, _ in tqdm(data_loader, desc="Extracting Features"):
-                features.append(self.model(imgs))
-        return torch.cat(features)  # Concatenating the multiple batches
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = self.model.to(self.device)
 
-    # Function used to apply the PCA to reduce the size of feature vectors from 512×1 50×1
+    # Function used to extract the features
+    def extract_features(self, dataloader):
+        features = []
+        labels = []
+
+        with torch.no_grad():
+            for inputs, targets in tqdm(dataloader, desc="Extracting Features"):
+                inputs = inputs.to(self.device)
+                targets = targets.to(self.device)
+
+                output = self.model(inputs)
+                output = output.view(output.size(0), -1)
+
+                features.append(output.cpu())
+                labels.append(targets.cpu())
+
+        features = torch.cat(features, dim=0).cpu()
+        labels = torch.cat(labels, dim=0).cpu()
+
+        return features, labels
+
+    # Function used to apply the PCA to reduce the size of feature vectors from 512×1 to 50×1
     def apply_pca(self, features):
         pca = PCA(n_components=self.pca_components)
         return pca.fit_transform(features)
@@ -73,10 +89,13 @@ class FeatureExtractor:
     # Function that runs everything
     def process(self):
         print("\nExtracting features using Resnet...")
-        train_features = self.extract_features(self.train_loader)
-        test_features = self.extract_features(self.test_loader)
-        print("Train features shape after extraction:", train_features.shape)
-        print("Test features shape after extraction:", test_features.shape)
+        train_features, train_labels = self.extract_features(self.train_loader)
+        test_features, test_labels = self.extract_features(self.test_loader)
+
+        print("\nStandardizing features with StandardScaler...")
+        scaler = StandardScaler()
+        train_features = scaler.fit_transform(train_features)
+        test_features = scaler.transform(test_features)
 
         print("\nReducing features with PCA...")
         train_features_pca = self.apply_pca(train_features)
@@ -84,4 +103,4 @@ class FeatureExtractor:
         print("Train features shape after PCA:", train_features_pca.shape)
         print("Test features shape after PCA:", test_features_pca.shape)
 
-        return train_features_pca, test_features_pca
+        return train_features_pca, train_labels, test_features_pca, test_labels
