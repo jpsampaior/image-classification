@@ -67,36 +67,3 @@ class DecitionTreeClassifier():
         self.feature_importance /= np.sum(self.feature_importance)
         return self
     
-    def predict_proba(self, X):
-        proba = np.empty((X.shape[0], self.n_class))  # array for probabilities
-        for i in range(X.shape[0]):
-            proba[i] = self._predict_row(X[i, :], self.tree)  # class distribution for each row (?)
-        return proba
-
-
-    
-'''''
-    def predict():
-    
-    def fit():
-
-    def build_tree():
-
-    def calculate_gini():
-
-    def info_gain():
-
-    def find_best_split():
-
-    def accuracy_score():
-'''
-    
-
-    
-
-    
-
-
-
-    
-
