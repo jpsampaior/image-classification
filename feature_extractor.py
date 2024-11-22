@@ -27,7 +27,7 @@ class FeatureExtractor:
         self.train_class_limit = train_class_limit
         self.test_class_limit = test_class_limit
         self.batch_size = batch_size
-        self.pca_components = pca_components
+        self.pca = PCA(n_components=pca_components)
 
         # Prepare to resize images to 224x224x3
         self.transform = transforms.Compose([
@@ -81,12 +81,6 @@ class FeatureExtractor:
 
         return features, labels
 
-    # Function used to apply the PCA to reduce the size of feature vectors from 512×1 to 50×1
-    def apply_pca(self, features):
-        pca = PCA(n_components=self.pca_components)
-        return pca.fit_transform(features)
-
-    # Function that runs everything
     def process(self):
         print("\nExtracting features using Resnet...")
         train_features, train_labels = self.extract_features(self.train_loader)
@@ -98,8 +92,8 @@ class FeatureExtractor:
         test_features = scaler.transform(test_features)
 
         print("\nReducing features with PCA...")
-        train_features_pca = self.apply_pca(train_features)
-        test_features_pca = self.apply_pca(test_features)
+        train_features_pca = self.pca.fit_transform(train_features)
+        test_features_pca = self.pca.transform(test_features)
         print("Train features shape after PCA:", train_features_pca.shape)
         print("Test features shape after PCA:", test_features_pca.shape)
 
