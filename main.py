@@ -1,9 +1,13 @@
+from torch import nn
+
 from feature_extractor import FeatureExtractor
 import numpy as np
 from gaussian_naive_bayes import GaussianNaiveBayes
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 #from decision_tree_classifier import DecitionTreeClassifier, DecitionTreeNode
+from multi_layer_perceptron import MultiLayerPerceptron
+import torch
 
 
 def main():
@@ -29,6 +33,13 @@ def main():
     sklearn_test_predictions = sklearn_gnb.predict(test_features_pca)
     sklearn_accuracy = accuracy_score(test_labels, sklearn_test_predictions)
     print("Scikit-learn Naive Bayes Accuracy:", sklearn_accuracy)
+
+    print("\nStarting the training process (MLP)...")
+    mlp = MultiLayerPerceptron()
+    mlp.train_model(torch.tensor(train_features_pca, dtype=torch.float32), torch.tensor(train_labels, dtype=torch.long))
+    mlp_accuracy = mlp.predict(torch.tensor(test_features_pca, dtype=torch.float32),
+                               torch.tensor(test_labels, dtype=torch.long))
+    print("MLP Accuracy:", mlp_accuracy)
 
 
 if __name__ == "__main__":
