@@ -9,6 +9,7 @@ class GaussianNaiveBayes:
         self.class_priors = {}
         self.accuracy = None
 
+    # Calculating the mean, variance and prior for each class
     def train_model(self, feature_vectors, labels):
         unique_classes = np.unique(labels)
         for class_label in unique_classes:
@@ -19,6 +20,7 @@ class GaussianNaiveBayes:
 
             self.class_priors[class_label] = class_samples.shape[0] / feature_vectors.shape[0]
 
+    # Applying the gaussian formula to get the density
     def gaussian_density(self, class_label, feature_vector):
         mean = self.class_means[class_label]
         variance = self.class_variances[class_label]
@@ -29,6 +31,8 @@ class GaussianNaiveBayes:
 
         return density
 
+    # Using log prior and log likelihood to get the total probability for the class
+    # Then select the max score as final prediction
     def predict(self, feature_vectors):
         predicted_classes = []
 
@@ -37,11 +41,10 @@ class GaussianNaiveBayes:
 
             for class_label in self.class_means:
                 log_prior = np.log(self.class_priors[class_label])
+                log_density = np.sum(np.log(self.gaussian_density(class_label, vector)))
+                class_scores[class_label] = log_prior + log_density
 
-                log_likelihood = np.sum(np.log(self.gaussian_density(class_label, vector)))
-
-                class_scores[class_label] = log_prior + log_likelihood
-
+            # Selects the class with the highest score (maximum likelihood) as the predicted class.
             predicted_class = max(class_scores, key=class_scores.get)
             predicted_classes.append(predicted_class)
 
@@ -49,6 +52,7 @@ class GaussianNaiveBayes:
 
         return self.predictions
 
+    # Comparing the predictions with the real labels to get the accuracy
     def get_accuracy(self, labels):
         self.accuracy = np.mean(self.predictions == labels)
 
