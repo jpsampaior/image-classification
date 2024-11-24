@@ -13,7 +13,7 @@ import time
 
 def main():
     extractor = FeatureExtractor()
-    train_features_pca, train_labels, test_features_pca, test_labels = extractor.process()
+    train_features_pca, train_labels, test_features_pca, test_labels = extractor.get_features_and_labels()
 
     train_features_pca = np.array(train_features_pca)
     test_features_pca = np.array(test_features_pca)

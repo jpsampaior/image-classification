@@ -10,6 +10,9 @@ from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
 
 
+# Filter function:
+# Receives the dataset and filter the images based on the limit
+# Basically, it identifies the class, checks the dictionary to see if its under the limit, if so, add the image
 def filter_by_class_limit(dataset, class_limit):
     filtered_data = []
     class_counts = defaultdict(int)
@@ -24,37 +27,49 @@ def filter_by_class_limit(dataset, class_limit):
 
 class FeatureExtractor:
     def __init__(self, train_class_limit=500, test_class_limit=100, batch_size=32, pca_components=50):
+        self.test_loader = None
+        self.train_loader = None
+        self.filtered_test_data = None
+        self.filtered_train_data = None
+        self.model = None
+        self.device = None
+        self.test_data = None
+        self.train_data = None
         self.train_class_limit = train_class_limit
         self.test_class_limit = test_class_limit
         self.batch_size = batch_size
         self.pca = PCA(n_components=pca_components)
 
+    def load_cifar10(self):
         # Prepare to resize images to 224x224x3
-        self.transform = transforms.Compose([
+        transform = transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
-        # Load dataset (CIFAR10) using the resize option
-        self.train_data = torchvision.datasets.CIFAR10(root="./data", train=True, download=True, transform=self.transform)
-        self.test_data = torchvision.datasets.CIFAR10(root="./data", train=False, download=True, transform=self.transform)
+        # Load CIFAR10 with the resize option
+        self.train_data = torchvision.datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
+        self.test_data = torchvision.datasets.CIFAR10(root="./data", train=False, download=True, transform=transform)
 
-        # Filter the data to get 500 training images (50 of each class) and 100 test images (10 of each class)
-        print(f"\nFiltering data to get {train_class_limit*10} training images and {test_class_limit*10} testing images...")
+    # Filter the data to get just the number of the images defined on the constructor
+    def filter_cifar10(self):
+        print(f"\nFiltering data to get {self.train_class_limit} training images and {self.test_class_limit} testing images (per class)...")
         self.filtered_train_data = filter_by_class_limit(self.train_data, self.train_class_limit)
         self.filtered_test_data = filter_by_class_limit(self.test_data, self.test_class_limit)
         print("Number of training images:", len(self.filtered_train_data))
         print("Number of test images:", len(self.filtered_test_data))
 
-        # Creating dataloaders
+    # Creating with just the images we want
+    def create_dataloaders(self):
         self.train_loader = DataLoader(self.filtered_train_data, batch_size=self.batch_size, shuffle=True, pin_memory=True)
         self.test_loader = DataLoader(self.filtered_test_data, batch_size=self.batch_size, shuffle=False, pin_memory=True)
 
-        # Initializing ResNet18 Model to extract the feature vectors
+    # Initializing ResNet18 Model to extract the feature vectors
+    def init_resnet18(self):
         self.model = resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
-        self.model = nn.Sequential(*list(self.model.children())[:-1])  # Remove the last layer
+        self.model = nn.Sequential(*list(self.model.children())[:-1])
         self.model.eval()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -66,30 +81,30 @@ class FeatureExtractor:
         labels = []
 
         with torch.no_grad():
-            for inputs, targets in tqdm(dataloader, desc="Extracting Features"):
-                inputs = inputs.to(self.device)
-                targets = targets.to(self.device)
+            for images, lbs in tqdm(dataloader, desc="Extracting Features"):
+                images = images.to(self.device)
+                lbs = lbs.to(self.device)
 
-                output = self.model(inputs)
-                output = output.view(output.size(0), -1)
+                feature = self.model(images)
+                feature = feature.view(feature.size(0), -1)
 
-                features.append(output.cpu())
-                labels.append(targets.cpu())
+                features.append(feature)
+                labels.append(lbs)
 
         features = torch.cat(features, dim=0).cpu()
         labels = torch.cat(labels, dim=0).cpu()
 
         return features, labels
 
-    def process(self):
+    def get_features_and_labels(self):
+        self.load_cifar10()
+        self.filter_cifar10()
+        self.create_dataloaders()
+        self.init_resnet18()
+
         print("\nExtracting features using Resnet...")
         train_features, train_labels = self.extract_features(self.train_loader)
         test_features, test_labels = self.extract_features(self.test_loader)
-
-        print("\nStandardizing features with StandardScaler...")
-        scaler = StandardScaler()
-        train_features = scaler.fit_transform(train_features)
-        test_features = scaler.transform(test_features)
 
         print("\nReducing features with PCA...")
         train_features_pca = self.pca.fit_transform(train_features)
