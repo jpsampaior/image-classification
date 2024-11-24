@@ -3,15 +3,12 @@ from torch import nn
 from feature_extractor import FeatureExtractor
 import numpy as np
 from gaussian_naive_bayes import GaussianNaiveBayes
-<<<<<<< HEAD
-=======
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
-#from decision_tree_classifier import DecitionTreeClassifier, DecitionTreeNode
+from decision_tree_classifier import DecitionTreeClassifier, DecitionTreeNode
 from multi_layer_perceptron import MultiLayerPerceptron
 import torch
 import time
->>>>>>> c5613f4008e61309c44ba8ea7896538d39cc0852
 
 
 # hello test 2
@@ -32,6 +29,22 @@ def main():
 
     accuracy = np.mean(val_predictions == val_labels)
     print("Naive Bayes Accuracy:", accuracy)
+
+    print("\nStarting the training process (Custom DTC)...")
+    dtc = CustomDTC()
+    dtc.train_model(train_features_pca, train_labels)
+    test_predictions_dtc = dtc.predict(test_features_pca)
+    test_predictions_dtc = np.array(test_predictions_dtc)
+    accuracy = np.mean(test_predictions == test_labels)
+    print("Custom Decision Tree Classifier:", accuracy)
+
+    print("\nStarting the training process (Scikit DTC)...")
+    sklearn_dtc = DecisionTreeClassifier()
+    sklearn_dtc.fit(train_features_pca, train_labels)
+    sklearn_dtc_test_predictions = sklearn_dtc.predict(test_features_pca)
+    sklearn_dtc_accuracy = accuracy_score(test_labels, sklearn_dtc_test_predictions)
+    print("Scikit-learn Decision Tree Accuracy: ", sklearn_dtc_accuracy)
+
 
     start_time = time.time()
     print("\nStarting the training process (MLP default layers config)...")
