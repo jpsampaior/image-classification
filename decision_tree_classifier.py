@@ -21,55 +21,45 @@ def compute_gini_gain(parent_labels, left_labels, right_labels):
     return gini_gain
 
 
-def majority_class(labels):
-    return np.argmax(np.bincount(labels))
-
-
 def split_data(features, labels, feature_index, threshold):
-    left_indices = features[:, feature_index] < threshold
-    right_indices = ~left_indices
+    X_left = []
+    X_right = []
 
-    X_left, y_left = features[left_indices], labels[left_indices]
-    X_right, y_right = features[right_indices], labels[right_indices]
+    y_left = []
+    y_right = []
+
+    for i in range(len(features)):
+        if float(features[i][feature_index]) <= threshold:
+            X_left.append(features[i])
+            y_left.append(labels[i])
+        else:
+            X_right.append(features[i])
+            y_right.append(labels[i])
 
     return X_left, X_right, y_left, y_right
 
 
-def find_best_split(features, labels):
-    best_feature = None
-    best_threshold = None
-    best_gain = -1
+def get_most_occurring_feature(labels):
+    frequency = {}
+    for cls in labels:
+        if cls in frequency:
+            frequency[cls] += 1
+        else:
+            frequency[cls] = 1
 
-    n_features = features.shape[1]
-    for feature_index in range(n_features):
-        thresholds = np.unique(features[:, feature_index])
-        for threshold in thresholds:
-            x_left, x_right, y_left, y_right = split_data(features, labels, feature_index, threshold)
-            if len(y_left) == 0 or len(y_right) == 0:
-                continue
-            gain = compute_gini_gain(labels, y_left, y_right)
-            if gain > best_gain:
-                best_gain = gain
-                best_feature = feature_index
-                best_threshold = threshold
+    most_common = None
+    max_count = -1
+    for key, count in frequency.items():
+        if count > max_count:
+            most_common = key
+            max_count = count
 
-    return best_feature, best_threshold, best_gain
-
-
-def stopping_criteria(depth, max_depth, labels, min_samples_split):
-    if depth >= max_depth:
-        return True
-    if len(labels) < min_samples_split:
-        return True
-    if len(np.unique(labels)) == 1:
-        return True
-    return False
+    return most_common
 
 
 class CustomDTC:
-    def __init__(self, max_depth=50, min_samples_split=2):
+    def __init__(self, max_depth=50):
         self.max_depth = max_depth
-        self.min_samples_split = min_samples_split
         self.root = None
 
     def train_model(self, feature_vectors, labels):
@@ -78,11 +68,10 @@ class CustomDTC:
     def predict(self, feature_vectors):
         predicted_classes = []
 
-        for vector in feature_vectors:
-            predicted_class = self.predict_single(vector, self.root)
-            predicted_classes.append(predicted_class)
-
-        return np.array(predicted_classes)
+        for feature in feature_vectors:
+            tree = self.root
+            predicted_classes.append(tree.decide(feature))
+        return predicted_classes
 
     def predict_single(self, vector, node):
         if node.is_leaf:
@@ -92,17 +81,46 @@ class CustomDTC:
         else:
             return self.predict_single(vector, node.right)
 
-    def build_tree(self, features, labels, depth):
+    def build_tree(self, features, labels, depth=0):
+        best_feature = None
+        best_threshold = None
+        best_gain = -1
 
-        best_feature, best_threshold, _ = find_best_split(features, labels)
-        X_left, X_right, y_left, y_right = split_data(features, labels, best_feature, best_threshold)
+        if len(labels) == 0:
+            return None
 
-        left_tree = self.build_tree(X_left, y_left, depth + 1)
-        right_tree = self.build_tree(X_right, y_right, depth + 1)
+        elif len(labels) == 1:
+            return Node(None, None, None, labels[0])
 
-        return Node(
-            feature_index=best_feature,
-            threshold=best_threshold,
-            left=left_tree,
-            right=right_tree
-        )
+        elif np.all(labels[0] == labels[:]):
+            return Node(None, None, None, labels[0])
+
+        elif depth == self.max_depth:
+            return Node(None, None, None, get_most_occurring_feature(labels[0]))
+
+        n_features = features.shape[1]
+        for feature_index in range(n_features):
+
+            thresholds = np.unique(features[:, feature_index])
+            thresholds_mean = np.mean(thresholds)
+            labels_new = []
+            x_left, x_right, y_left, y_right = split_data(features, labels, feature_index, thresholds_mean)
+            labels_new.append(y_left)
+            labels_new.append(y_right)
+            gain = compute_gini_gain(labels, y_left, y_right)
+
+            if gain > best_gain:
+                best_gain = gain
+                best_feature = feature_index
+                best_threshold = thresholds_mean
+
+        X_left, X_right, y_left, y_right = split_data(features, labels, best_feature,
+                                                      best_threshold)
+
+        depth += 1
+
+        right_tree = self.build_tree(np.array(X_right), np.array(y_right), depth)
+        left_tree = self.build_tree(np.array(X_left), np.array(y_left), depth)
+
+        return Node(left_tree, right_tree,
+                    lambda feature: feature[best_feature] < best_threshold)

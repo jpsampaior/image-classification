@@ -32,6 +32,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         dtc = CustomDTC()
         dtc.train_model(train_features_pca, train_labels)
         test_predictions_dtc = dtc.predict(test_features_pca)
+        test_predictions_dtc = np.array(test_predictions_dtc)
         accuracy = np.mean(test_predictions_dtc == test_labels)
         print("Custom Decision Tree Classifier Accuracy:", accuracy)
 
