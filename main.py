@@ -14,7 +14,7 @@ import time
 >>>>>>> c5613f4008e61309c44ba8ea7896538d39cc0852
 
 
-# hello test
+# hello test 2
 
 def main():
     extractor = FeatureExtractor()
@@ -26,7 +26,7 @@ def main():
     gnb = GaussianNaiveBayes()
     gnb.train_model(train_features_pca, train_labels)
 
-    #nn = 
+    
 
     val_predictions = gnb.predict(val_features_pca)
 
