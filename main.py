@@ -1,6 +1,17 @@
+from torch import nn
+
 from feature_extractor import FeatureExtractor
 import numpy as np
 from gaussian_naive_bayes import GaussianNaiveBayes
+<<<<<<< HEAD
+=======
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+#from decision_tree_classifier import DecitionTreeClassifier, DecitionTreeNode
+from multi_layer_perceptron import MultiLayerPerceptron
+import torch
+import time
+>>>>>>> c5613f4008e61309c44ba8ea7896538d39cc0852
 
 
 # hello test
@@ -21,6 +32,53 @@ def main():
 
     accuracy = np.mean(val_predictions == val_labels)
     print("Naive Bayes Accuracy:", accuracy)
+
+    start_time = time.time()
+    print("\nStarting the training process (MLP default layers config)...")
+    mlp = MultiLayerPerceptron()
+    mlp.train_model(torch.tensor(train_features_pca, dtype=torch.float32), torch.tensor(train_labels, dtype=torch.long))
+    mlp_accuracy = mlp.predict(torch.tensor(test_features_pca, dtype=torch.float32),
+                               torch.tensor(test_labels, dtype=torch.long))
+    end_time = time.time()
+    print("MLP Accuracy:", mlp_accuracy)
+    print(f"MLP Time (seconds): {end_time - start_time:.2f}")
+
+    print("\nStarting the training process (MLP with -1 layer)...")
+    mlp2 = MultiLayerPerceptron(depth=2)
+    mlp2.train_model(torch.tensor(train_features_pca, dtype=torch.float32), torch.tensor(train_labels, dtype=torch.long))
+    mlp_accuracy = mlp2.predict(torch.tensor(test_features_pca, dtype=torch.float32),
+                                torch.tensor(test_labels, dtype=torch.long))
+    print("MLP2 Accuracy:", mlp_accuracy)
+
+    print("\nStarting the training process (MLP with +1 layer)...")
+    mlp3 = MultiLayerPerceptron(depth=4)
+    mlp3.train_model(torch.tensor(train_features_pca, dtype=torch.float32),
+                     torch.tensor(train_labels, dtype=torch.long))
+    mlp_accuracy = mlp3.predict(torch.tensor(test_features_pca, dtype=torch.float32),
+                                torch.tensor(test_labels, dtype=torch.long))
+    print("MLP3 Accuracy:", mlp_accuracy)
+
+    start_time = time.time()
+    print("\nStarting the training process (MLP with -256 layers size - 256 total)...")
+    mlp4 = MultiLayerPerceptron(hidden_layer_sizes=256)
+    mlp4.train_model(torch.tensor(train_features_pca, dtype=torch.float32),
+                     torch.tensor(train_labels, dtype=torch.long))
+    mlp_accuracy = mlp4.predict(torch.tensor(test_features_pca, dtype=torch.float32),
+                                torch.tensor(test_labels, dtype=torch.long))
+    end_time = time.time()
+    print("MLP4 Accuracy:", mlp_accuracy)
+    print(f"MLP4 Time (seconds): {end_time - start_time:.2f}")
+
+    start_time = time.time()
+    print("\nStarting the training process (MLP with +512 layers size - 1024 total)...")
+    mlp5 = MultiLayerPerceptron(hidden_layer_sizes=1024)
+    mlp5.train_model(torch.tensor(train_features_pca, dtype=torch.float32),
+                     torch.tensor(train_labels, dtype=torch.long))
+    mlp_accuracy = mlp5.predict(torch.tensor(test_features_pca, dtype=torch.float32),
+                                torch.tensor(test_labels, dtype=torch.long))
+    end_time = time.time()
+    print("MLP5 Accuracy:", mlp_accuracy)
+    print(f"MLP5 Time (seconds): {end_time - start_time:.2f}")
 
 
 if __name__ == "__main__":
