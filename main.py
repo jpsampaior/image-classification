@@ -7,6 +7,7 @@ from sklearn.metrics import accuracy_score
 from multi_layer_perceptron import MultiLayerPerceptron
 import time
 from vgg11 import *
+from evaluation import generate_confusion_matrix_custom, generate_confusion_matrix_sklearn, extract_evaluation_metrics, generate_evaluation_table
 
 
 def train_model_choice(choice, extractor, train_features_pca, train_labels, test_features_pca, test_labels):
@@ -150,6 +151,65 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
         print("CNN/VGG11 variant 5 Accuracy:", accuracy)
 
+    elif choice == "15":
+        all_evaluation_metrics = []
+        print("\nStarting the training process (all models)")
+        print("\nTraining Custom Gaussian Naive Bayes (Custom GNB)")
+        gnb = GaussianNaiveBayes()
+        gnb.train_model(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, gnb.predict(test_features_pca),
+                                                                 "Custom Gaussian Naive Bayes (Custom GNB)"))
+
+        print("\nTraining Scikit-learn Gaussian Naive Bayes (SK-Learn GNB)")
+        sklearn_gnb = GaussianNB()
+        sklearn_gnb.fit(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, sklearn_gnb.predict(test_features_pca),
+                                                                 "Scikit-learn Gaussian Naive Bayes (SK-Learn GNB)"))
+
+        print("\nTraining Custom Decision Tree Classifier (Custom DTC)")
+        dtc = CustomDTC()
+        dtc.train_model(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, dtc.predict(test_features_pca),
+                                                                 "Custom Decision Tree Classifier (Custom DTC)"))
+
+        print("\nTraining Scikit-learn Decision Tree Classifier (SK-Learn DTC)")
+        sklearn_dtc = DecisionTreeClassifier()
+        sklearn_dtc.fit(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, sklearn_dtc.predict(test_features_pca),
+                                                                 "Scikit-learn Decision Tree Classifier (SK-Learn DTC)"))
+
+        print("\nTraining Multi Layer Perceptron (MLP) with default configuration")
+        mlp = MultiLayerPerceptron()
+        mlp.train_model(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, mlp.predict(test_features_pca),
+                                                                 "Multi Layer Perceptron (MLP) with default configuration"))
+
+        print("\nTraining Multi Layer Perceptron (MLP) with -1 layer")
+        mlp2 = MultiLayerPerceptron(depth=2)
+        mlp2.train_model(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, mlp2.predict(test_features_pca),
+                                                                 "Multi Layer Perceptron (MLP) with -1 layer"))
+
+        print("\nTraining Multi Layer Perceptron (MLP) with +1 layer")
+        mlp3 = MultiLayerPerceptron(depth=4)
+        mlp3.train_model(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, mlp3.predict(test_features_pca),
+                                                                 "Multi Layer Perceptron (MLP) with +1 layer"))
+
+        print("\nTraining Multi Layer Perceptron (MLP) with -256 layer size (total 256)")
+        mlp4 = MultiLayerPerceptron(hidden_layer_sizes=256)
+        mlp4.train_model(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, mlp4.predict(test_features_pca),
+                                                                 "Multi Layer Perceptron (MLP) with -256 layer size (total 256)"))
+
+        print("\nTraining Multi Layer Perceptron (MLP) with +512 layer size (total 1024)")
+        mlp5 = MultiLayerPerceptron(hidden_layer_sizes=1024)
+        mlp5.train_model(train_features_pca, train_labels)
+        all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, mlp5.predict(test_features_pca),
+                                                                 "Multi Layer Perceptron (MLP) with +512 layer size (total 1024)"))
+
+        generate_evaluation_table(all_evaluation_metrics)
+
 
 def main():
     extractor = FeatureExtractor()
@@ -176,6 +236,8 @@ def main():
         print("12. CNN / VGG11 with with +1 layer")
         print("13. CNN / VGG11 with with 2 kernel size")
         print("14. CNN / VGG11 with with 4 kernel size")
+        print("15. Evaluation section: Train all models and display summary evaluation table (accuracy, precision, "
+              "recall, F1-Measure)")
         print("0. Exit")
 
         choice = input("\nEnter the number of the model you want to train: ")

@@ -5,3 +5,5 @@ tqdm
 collections
 sklearn
 time
+pandas
+matplotlib
