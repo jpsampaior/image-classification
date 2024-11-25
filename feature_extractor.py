@@ -100,16 +100,16 @@ class FeatureExtractor:
         self.load_cifar10()
         self.filter_cifar10()
         self.create_dataloaders()
-        self.init_resnet18()
-
-        print("\nExtracting features using Resnet...")
-        train_features, train_labels = self.extract_features(self.train_loader)
-        test_features, test_labels = self.extract_features(self.test_loader)
-
-        print("\nReducing features with PCA...")
-        train_features_pca = self.pca.fit_transform(train_features)
-        test_features_pca = self.pca.transform(test_features)
-        print("Train features shape after PCA:", train_features_pca.shape)
-        print("Test features shape after PCA:", test_features_pca.shape)
-
-        return train_features_pca, train_labels, test_features_pca, test_labels
+        # self.init_resnet18()
+        #
+        # print("\nExtracting features using Resnet...")
+        # train_features, train_labels = self.extract_features(self.train_loader)
+        # test_features, test_labels = self.extract_features(self.test_loader)
+        #
+        # print("\nReducing features with PCA...")
+        # train_features_pca = self.pca.fit_transform(train_features)
+        # test_features_pca = self.pca.transform(test_features)
+        # print("Train features shape after PCA:", train_features_pca.shape)
+        # print("Test features shape after PCA:", test_features_pca.shape)
+        #
+        # return train_features_pca, train_labels, test_features_pca, test_labels
