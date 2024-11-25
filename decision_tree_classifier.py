@@ -2,9 +2,15 @@ import numpy as np
 from node import Node
 
 '''
-The decition_tree_classifier file contains functions and classes for the purposes of carrying out logic of
-decision tree using the gini index. Helper methods are listed at the top of the file which are used by the 
-class CustomDTC which carries out the logic of the decision tree.
+The decition_tree_classifier.py file contains functions and classes for the purposes of carrying out logic of
+decision tree using the gini index as the splitting criteria. 
+
+Helper methods are listed at the top of the file which are used by the class CustomDTC which carries out the logic of the decision tree.
+The helper methods include functions for calculating gini impurity, gini gain, and splitting the dataset based on feature thresholds.
+
+The decition_tree_classifier.py file contains the CustomDTC, a class which implaments the decision tree classifier.
+CustomDTC contains a function to train the model and predict features based off the implamentation of the decision tree, which is descibed in 
+a function which builds the tree (build_tree).
 '''
 
 # Calculation of gini impurity index based off of gini impurity formula.
@@ -86,15 +92,6 @@ class CustomDTC:
             tree = self.root
             predicted_classes.append(tree.decide(feature))
         return predicted_classes
-
-    # Not sure if this is necissary. Will delete after testing.
-    def predict_single(self, vector, node):
-        if node.is_leaf:
-            return node.label
-        if vector[node.feature_index] < node.threshold:
-            return self.predict_single(vector, node.left)
-        else:
-            return self.predict_single(vector, node.right)
 
     # Function contains logic for decision tree construction. Inputs are the training features and training labels provided.
     # The function recursivly constructs the decision tree based on gini gain splitting criteria and returns the root node
