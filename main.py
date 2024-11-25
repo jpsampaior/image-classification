@@ -104,6 +104,8 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         mlp5.predict(test_features_pca)
         mlp_accuracy = mlp5.get_accuracy(test_labels)
         end_time = time.time()
+        generate_confusion_matrix_custom(test_labels, mlp5.predict(test_features_pca),
+                                         "MLP with +512 layers size - 1024 total")
         print("MLP5 Accuracy:", mlp_accuracy)
         print(f"MLP5 Time (seconds): {end_time - start_time:.2f}")
 
