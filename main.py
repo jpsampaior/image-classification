@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score
 from multi_layer_perceptron import MultiLayerPerceptron
 import torch
 import time
+from evaluation import generate_confusion_matrix_custom, generate_confusion_matrix_sklearn
 
 
 def train_model_choice(choice, train_features_pca, train_labels, test_features_pca, test_labels):
@@ -17,6 +18,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         gnb.train_model(train_features_pca, train_labels)
         gnb.predict(test_features_pca)
         accuracy = gnb.get_accuracy(test_labels)
+        generate_confusion_matrix_custom(test_labels, gnb.predict(test_features_pca), "Custom GNB")
         print("Custom Naive Bayes Accuracy:", accuracy)
 
     elif choice == '2':
@@ -25,6 +27,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         sklearn_gnb.fit(train_features_pca, train_labels)
         sklearn_test_predictions = sklearn_gnb.predict(test_features_pca)
         sklearn_accuracy = accuracy_score(test_labels, sklearn_test_predictions)
+        generate_confusion_matrix_sklearn(test_labels, sklearn_gnb.predict(test_features_pca), "Scikit GNB")
         print("Scikit-learn Naive Bayes Accuracy:", sklearn_accuracy)
 
     elif choice == '3':
@@ -34,6 +37,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         test_predictions_dtc = dtc.predict(test_features_pca)
         test_predictions_dtc = np.array(test_predictions_dtc)
         accuracy = np.mean(test_predictions_dtc == test_labels)
+        generate_confusion_matrix_custom(test_labels, dtc.predict(test_features_pca), "Custom DTC")
         print("Custom Decision Tree Classifier Accuracy:", accuracy)
 
     elif choice == '4':
@@ -42,6 +46,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         sklearn_dtc.fit(train_features_pca, train_labels)
         sklearn_dtc_test_predictions = sklearn_dtc.predict(test_features_pca)
         sklearn_dtc_accuracy = accuracy_score(test_labels, sklearn_dtc_test_predictions)
+        generate_confusion_matrix_sklearn(test_labels, sklearn_dtc.predict(test_features_pca), "Scikit DTC")
         print("Scikit-learn Decision Tree Accuracy: ", sklearn_dtc_accuracy)
 
     elif choice == '5':
@@ -52,6 +57,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         mlp.predict(test_features_pca)
         mlp_accuracy = mlp.get_accuracy(test_labels)
         end_time = time.time()
+        generate_confusion_matrix_custom(test_labels, mlp.predict(test_features_pca), "MLP default layers config")
         print("MLP Accuracy:", mlp_accuracy)
         print(f"MLP Time (seconds): {end_time - start_time:.2f}")
 
@@ -63,6 +69,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         mlp2.predict(test_features_pca)
         mlp_accuracy = mlp2.get_accuracy(test_labels)
         end_time = time.time()
+        generate_confusion_matrix_custom(test_labels, mlp2.predict(test_features_pca), "MLP with -1 layer")
         print("MLP2 Accuracy:", mlp_accuracy)
         print(f"MLP2 Time (seconds): {end_time - start_time:.2f}")
 
@@ -74,6 +81,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         mlp3.predict(test_features_pca)
         mlp_accuracy = mlp3.get_accuracy(test_labels)
         end_time = time.time()
+        generate_confusion_matrix_custom(test_labels, mlp3.predict(test_features_pca), "MLP with +1 layer")
         print("MLP3 Accuracy:", mlp_accuracy)
         print(f"MLP3 Time (seconds): {end_time - start_time:.2f}")
 
@@ -85,6 +93,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         mlp4.predict(test_features_pca)
         mlp_accuracy = mlp4.get_accuracy(test_labels)
         end_time = time.time()
+        generate_confusion_matrix_custom(test_labels, mlp4.predict(test_features_pca), "MLP with -256 layers size - 256 total")
         print("MLP4 Accuracy:", mlp_accuracy)
         print(f"MLP4 Time (seconds): {end_time - start_time:.2f}")
 
@@ -96,6 +105,7 @@ def train_model_choice(choice, train_features_pca, train_labels, test_features_p
         mlp5.predict(test_features_pca)
         mlp_accuracy = mlp5.get_accuracy(test_labels)
         end_time = time.time()
+        generate_confusion_matrix_custom(test_labels, mlp5.predict(test_features_pca), "MLP with +512 layers size - 1024 total")
         print("MLP5 Accuracy:", mlp_accuracy)
         print(f"MLP5 Time (seconds): {end_time - start_time:.2f}")
 
