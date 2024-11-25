@@ -25,4 +25,5 @@ def generate_confusion_matrix_custom(actual_labels, predicted_labels, model_name
     
     print(result)
 
-def generate_evaluation_table():
+# prototype for generating table
+def generate_evaluation_table(models, test_features, test_labels, model_names):
