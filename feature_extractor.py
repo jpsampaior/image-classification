@@ -10,16 +10,30 @@ from tqdm import tqdm
 
 
 # Filter function:
-def filter_by_class_limit(dataset, class_limit):
+from collections import defaultdict
+from torchvision import transforms
+import torch
+
+def filter_by_class_limit(dataset, class_limit, transform=None):
+
     filtered_data = []
     class_counts = defaultdict(int)
-    for img, label in dataset:
+
+    for img, label in zip(dataset.data, dataset.targets):
         if class_counts[label] < class_limit:
+            # Converter a imagem para tensor e aplicar transformações
+            img = transforms.ToTensor()(img)
+            if transform:
+                img = transform(img)
             filtered_data.append((img, label))
             class_counts[label] += 1
+
+        # Parar quando todas as classes atingirem o limite
         if all(count >= class_limit for count in class_counts.values()):
             break
+
     return filtered_data
+
 
 
 class FeatureExtractor:
@@ -93,20 +107,20 @@ class FeatureExtractor:
         # Criar os DataLoaders
         self.create_dataloaders()
 
-        # # Inicializar o modelo
-        # self.init_resnet18()
-        #
-        # # Extrair características usando ResNet
-        # print("\nExtracting features using Resnet...")
-        # train_features, train_labels = self.extract_features(self.train_loader)
-        # test_features, test_labels = self.extract_features(self.test_loader)
-        #
-        # # Reduzir as características usando PCA
-        # print("\nReducing features with PCA...")
-        # train_features_pca = self.pca.fit_transform(train_features)
-        # test_features_pca = self.pca.transform(test_features)
-        #
-        # print("Train features shape after PCA:", train_features_pca.shape)
-        # print("Test features shape after PCA:", test_features_pca.shape)
-        #
-        # return train_features_pca, train_labels, test_features_pca, test_labels
+        # Inicializar o modelo
+        self.init_resnet18()
+
+        # Extrair características usando ResNet
+        print("\nExtracting features using Resnet...")
+        train_features, train_labels = self.extract_features(self.train_loader)
+        test_features, test_labels = self.extract_features(self.test_loader)
+
+        # Reduzir as características usando PCA
+        print("\nReducing features with PCA...")
+        train_features_pca = self.pca.fit_transform(train_features)
+        test_features_pca = self.pca.transform(test_features)
+
+        print("Train features shape after PCA:", train_features_pca.shape)
+        print("Test features shape after PCA:", test_features_pca.shape)
+
+        return train_features_pca, train_labels, test_features_pca, test_labels

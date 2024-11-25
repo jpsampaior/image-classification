@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch import optim
 import numpy as np
+from torchvision import transforms
 
 
 def train_vgg11_model(model, train_loader, device, num_epochs=10):

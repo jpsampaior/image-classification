@@ -1,88 +1,150 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torchvision
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, Dataset
+from sklearn.tree import DecisionTreeClassifier
+from decision_tree_classifier import CustomDTC
+from feature_extractor import FeatureExtractor
 import numpy as np
-import torch.nn.functional as F
+from gaussian_naive_bayes import GaussianNaiveBayes
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+from multi_layer_perceptron import MultiLayerPerceptron
+import torch
+import time
 from vgg11 import *
 
 
-# Definir a classe personalizada para filtrar as imagens
-class CustomCIFAR10(Dataset):
-    def __init__(self, dataset, train=True, n_train=500, n_test=100):
-        self.dataset = dataset
-        self.train = train
-        self.n_train = n_train
-        self.n_test = n_test
+def train_model_choice(choice, extractor, train_features_pca, train_labels, test_features_pca, test_labels):
+    if choice == '1':
+        print("\nStarting the training process (Custom GNB)...")
+        gnb = GaussianNaiveBayes()
+        gnb.train_model(train_features_pca, train_labels)
+        gnb.predict(test_features_pca)
+        accuracy = gnb.get_accuracy(test_labels)
+        print("Custom Naive Bayes Accuracy:", accuracy)
 
-        # Filtrar as imagens por classe
-        self.data, self.labels = self.filter_data()
+    elif choice == '2':
+        print("\nStarting the training process (Scikit GNB)...")
+        sklearn_gnb = GaussianNB()
+        sklearn_gnb.fit(train_features_pca, train_labels)
+        sklearn_test_predictions = sklearn_gnb.predict(test_features_pca)
+        sklearn_accuracy = accuracy_score(test_labels, sklearn_test_predictions)
+        print("Scikit-learn Naive Bayes Accuracy:", sklearn_accuracy)
 
-    def filter_data(self):
-        data = []
-        labels = []
+    elif choice == '3':
+        print("\nStarting the training process (Custom DTC)...")
+        dtc = CustomDTC()
+        dtc.train_model(train_features_pca, train_labels)
+        test_predictions_dtc = dtc.predict(test_features_pca)
+        test_predictions_dtc = np.array(test_predictions_dtc)
+        accuracy = np.mean(test_predictions_dtc == test_labels)
+        print("Custom Decision Tree Classifier Accuracy:", accuracy)
 
-        # Para cada classe (0 a 9 no CIFAR-10)
-        for label in range(10):
-            class_data = []
-            class_labels = []
+    elif choice == '4':
+        print("\nStarting the training process (Scikit DTC)...")
+        sklearn_dtc = DecisionTreeClassifier()
+        sklearn_dtc.fit(train_features_pca, train_labels)
+        sklearn_dtc_test_predictions = sklearn_dtc.predict(test_features_pca)
+        sklearn_dtc_accuracy = accuracy_score(test_labels, sklearn_dtc_test_predictions)
+        print("Scikit-learn Decision Tree Accuracy: ", sklearn_dtc_accuracy)
 
-            # Filtra as imagens para a classe
-            for i in range(len(self.dataset)):
-                if self.dataset.targets[i] == label:
-                    class_data.append(self.dataset.data[i])
-                    class_labels.append(self.dataset.targets[i])
+    elif choice == '5':
+        start_time = time.time()
+        print("\nStarting the training process (MLP default layers config)...")
+        mlp = MultiLayerPerceptron()
+        mlp.train_model(train_features_pca, train_labels)
+        mlp.predict(test_features_pca)
+        mlp_accuracy = mlp.get_accuracy(test_labels)
+        end_time = time.time()
+        print("MLP Accuracy:", mlp_accuracy)
+        print(f"MLP Time (seconds): {end_time - start_time:.2f}")
 
-            # Dividir em treino e teste
-            if self.train:
-                data.extend(class_data[:self.n_train])  # Pegue as 500 primeiras imagens para treino
-                labels.extend(class_labels[:self.n_train])
-            else:
-                data.extend(class_data[self.n_train:self.n_train + self.n_test])  # Pegue as 100 imagens para teste
-                labels.extend(class_labels[self.n_train:self.n_train + self.n_test])
+    elif choice == '6':
+        start_time = time.time()
+        print("\nStarting the training process (MLP with -1 layer)...")
+        mlp2 = MultiLayerPerceptron(depth=2)
+        mlp2.train_model(train_features_pca, train_labels)
+        mlp2.predict(test_features_pca)
+        mlp_accuracy = mlp2.get_accuracy(test_labels)
+        end_time = time.time()
+        print("MLP2 Accuracy:", mlp_accuracy)
+        print(f"MLP2 Time (seconds): {end_time - start_time:.2f}")
 
-        return np.array(data), np.array(labels)
+    elif choice == '7':
+        start_time = time.time()
+        print("\nStarting the training process (MLP with +1 layer)...")
+        mlp3 = MultiLayerPerceptron(depth=4)
+        mlp3.train_model(train_features_pca, train_labels)
+        mlp3.predict(test_features_pca)
+        mlp_accuracy = mlp3.get_accuracy(test_labels)
+        end_time = time.time()
+        print("MLP3 Accuracy:", mlp_accuracy)
+        print(f"MLP3 Time (seconds): {end_time - start_time:.2f}")
 
-    def __len__(self):
-        return len(self.data)
+    elif choice == '8':
+        start_time = time.time()
+        print("\nStarting the training process (MLP with -256 layers size - 256 total)...")
+        mlp4 = MultiLayerPerceptron(hidden_layer_sizes=256)
+        mlp4.train_model(train_features_pca, train_labels)
+        mlp4.predict(test_features_pca)
+        mlp_accuracy = mlp4.get_accuracy(test_labels)
+        end_time = time.time()
+        print("MLP4 Accuracy:", mlp_accuracy)
+        print(f"MLP4 Time (seconds): {end_time - start_time:.2f}")
 
-    def __getitem__(self, idx):
-        img = self.data[idx]
-        label = self.labels[idx]
+    elif choice == '9':
+        start_time = time.time()
+        print("\nStarting the training process (MLP with +512 layers size - 1024 total)...")
+        mlp5 = MultiLayerPerceptron(hidden_layer_sizes=1024)
+        mlp5.train_model(train_features_pca, train_labels)
+        mlp5.predict(test_features_pca)
+        mlp_accuracy = mlp5.get_accuracy(test_labels)
+        end_time = time.time()
+        print("MLP5 Accuracy:", mlp_accuracy)
+        print(f"MLP5 Time (seconds): {end_time - start_time:.2f}")
 
-        # Converter a imagem para tensor e aplicar transformações
-        img = transforms.ToTensor()(img)
-        return img, label
+    elif choice == '10':
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = VGG11().to(device)
+        print("\nStarting the training process (CNN/VGG11)...")
+        train_vgg11_model(model, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
+        accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        print("CNN/VGG11 Accuracy:", accuracy)
 
 
-# Passos para carregar os dados CIFAR-10 e aplicar o filtro
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalização para imagens RGB
-])
+def main():
+    extractor = FeatureExtractor()
+    train_features_pca, train_labels, test_features_pca, test_labels = extractor.get_features_and_labels()
 
-# Carregar o dataset CIFAR-10 completo
-full_train_dataset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-full_test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    train_features_pca = np.array(train_features_pca)
+    test_features_pca = np.array(test_features_pca)
+    train_labels = train_labels.detach().cpu().numpy()
+    test_labels = test_labels.detach().cpu().numpy()
 
-# Criar datasets filtrados
-train_dataset = CustomCIFAR10(full_train_dataset, train=True, n_train=500, n_test=100)
-test_dataset = CustomCIFAR10(full_test_dataset, train=False, n_train=500, n_test=100)
+    while True:
+        print("\nChoose a model to train and predict:")
+        print("1. Custom Gaussian Naive Bayes (Custom GNB)")
+        print("2. Scikit-learn Gaussian Naive Bayes (SK-Learn GNB)")
+        print("3. Custom Decision Tree Classifier (Custom DTC)")
+        print("4. Scikit-learn Decision Tree Classifier (SK-Learn DTC)")
+        print("5. Multi Layer Perceptron (MLP) with default configuration")
+        print("6. Multi Layer Perceptron (MLP) with -1 layer")
+        print("7. Multi Layer Perceptron (MLP) with +1 layer")
+        print("8. Multi Layer Perceptron (MLP) with -256 layer size (total 256)")
+        print("9. Multi Layer Perceptron (MLP) with +512 layer size (total 1024)")
+        print("10. CNN / VGG11 with default configuration")
+        print("0. Exit")
 
-# DataLoader para treino e teste
-train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=128, shuffle=False)
+        choice = input("\nEnter the number of the model you want to train: ")
+        if choice == '0':
+            print("\nExiting...")
+            break
 
-# Verificar a quantidade de dados
-print(f"Número de imagens de treino: {len(train_loader.dataset)}")
-print(f"Número de imagens de teste: {len(test_loader.dataset)}")
+        train_model_choice(choice, extractor, train_features_pca, train_labels, test_features_pca, test_labels)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = VGG11().to(device)
-train_vgg11_model(model, train_loader, device)
-predictions, true_labels = predict_vgg11_model(model, test_loader, device)
-accuracy = get_accuracy_vgg11_model(predictions, true_labels)
-print(accuracy)
+        again = input("\nDo you want to train another model? (y/n): ")
+        if again.lower() != 'y':
+            print("\nExiting...")
+            break
 
+
+if __name__ == "__main__":
+    main()
