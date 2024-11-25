@@ -1,12 +1,10 @@
 from sklearn.tree import DecisionTreeClassifier
 from decision_tree_classifier import CustomDTC
 from feature_extractor import FeatureExtractor
-import numpy as np
 from gaussian_naive_bayes import GaussianNaiveBayes
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 from multi_layer_perceptron import MultiLayerPerceptron
-import torch
 import time
 from vgg11 import *
 
@@ -109,6 +107,49 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
         print("CNN/VGG11 Accuracy:", accuracy)
 
+    elif choice == '11':
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model2 = VGG11().to(device)
+        model2.conv_layers = nn.Sequential(*list(model2.conv_layers.children())[:-1])
+        print("\nStarting the training process (CNN/VGG11) with -1 layer...")
+        train_vgg11_model(model2, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model2, extractor.test_loader, device)
+        accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        print("CNN/VGG11 variant 2 Accuracy:", accuracy)
+
+    elif choice == '12':
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model3 = VGG11().to(device)
+        model3.conv_layers = nn.Sequential(
+            *list(model3.conv_layers.children()),
+            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),  # Adiciona nova convolução
+            nn.BatchNorm2d(512),
+            nn.ReLU()
+        )
+        print("\nStarting the training process (CNN/VGG11) with +1 layer...")
+        train_vgg11_model(model3, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model3, extractor.test_loader, device)
+        accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        print("CNN/VGG11 variant 3 Accuracy:", accuracy)
+
+    elif choice == '13':
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = VGG11(kernel_size=4).to(device)
+        print("\nStarting the training process (CNN/VGG11) with 4 kernel size...")
+        train_vgg11_model(model, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
+        accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        print("CNN/VGG11 variant 4 Accuracy:", accuracy)
+
+    elif choice == '14':
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = VGG11(kernel_size=2).to(device)
+        print("\nStarting the training process (CNN/VGG11) with 2 kernel size...")
+        train_vgg11_model(model, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
+        accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        print("CNN/VGG11 variant 5 Accuracy:", accuracy)
+
 
 def main():
     extractor = FeatureExtractor()
@@ -131,6 +172,10 @@ def main():
         print("8. Multi Layer Perceptron (MLP) with -256 layer size (total 256)")
         print("9. Multi Layer Perceptron (MLP) with +512 layer size (total 1024)")
         print("10. CNN / VGG11 with default configuration")
+        print("11. CNN / VGG11 with with -1 layer")
+        print("12. CNN / VGG11 with with +1 layer")
+        print("13. CNN / VGG11 with with 2 kernel size")
+        print("14. CNN / VGG11 with with 4 kernel size")
         print("0. Exit")
 
         choice = input("\nEnter the number of the model you want to train: ")
