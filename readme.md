@@ -60,6 +60,16 @@ The train_vgg11_model method trains the network using cross-entropy loss and sto
 The predict_vgg11_model method evaluates the model on test data, returning predictions and true labels for analysis. The get_accuracy_vgg11_model function computes the accuracy, measuring the proportion of correct predictions. This implementation offers a robust and adaptable VGG-11-based solution for supervised learning tasks in computer vision.
 
 ### 6. `decision_tree_classifier.py`
+The decition_tree_classifier.py file contains functions and classes for the purposes of carrying out logic of
+decision tree using the gini index as the splitting criteria. 
+
+Helper methods are listed at the top of the file which are used by the class CustomDTC which carries out the logic of the decision tree.
+The helper methods include functions for calculating gini impurity, gini gain, and splitting the dataset based on feature thresholds.
+
+The decition_tree_classifier.py file contains the CustomDTC, a class which implaments the decision tree classifier.
+CustomDTC contains a function to train the model and predict features based off the implamentation of the decision tree, which is descibed in 
+a function which builds the tree (build_tree).
+
 ### 7. `node.py`
 
 ## How to run the project
