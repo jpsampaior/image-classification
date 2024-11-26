@@ -71,6 +71,9 @@ CustomDTC contains a function to train the model and predict features based off 
 a function which builds the tree (build_tree).
 
 ### 7. `node.py`
+The Node class serves as the data stucture containing the left and right subtrees, decision function (gini), as well as labels.
+
+The node class also contains a function, 'decide' which determines a label for a given feature vector.
 
 ## How to run the project
 To run this project, you need to have Python installed on your machine. So before running the project, make sure you have Python installed. If you don't have Python installed, you can download it from the official website: https://www.python.org/downloads/
