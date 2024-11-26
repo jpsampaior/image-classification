@@ -86,7 +86,7 @@ Once you have the repository cloned, you can navigate to the project's root dire
 pip install -r requirements.txt
 ```
 
-After installing the dependencies, please check if all the dependencies were installed correctly, by checking the files for any errors on the import statements.
+After installing the dependencies, please check if all the dependencies were installed correctly, by checking the files for any errors on the import statements, if some dependencies weren't installed, please install it manually.
 
 Finally, you can run the project by executing the following command:
 
