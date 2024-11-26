@@ -95,3 +95,5 @@ python main.py
 ```
 
 This command will start the project and display a menu with the available models and variants. You can choose which model to train and predict the CIFAR-10 dataset by entering the corresponding number. The program will then execute the selected model and display the results, as well as some additional evaluation metrics.
+
+Another options, is to run the main file using your IDE run ui button.
