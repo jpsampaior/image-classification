@@ -1,6 +1,8 @@
 from sklearn.tree import DecisionTreeClassifier
+from torch.utils.data import DataLoader
+
 from decision_tree_classifier import CustomDTC
-from feature_extractor import FeatureExtractor
+from feature_extractor import FeatureExtractor, filter_for_cnn
 from gaussian_naive_bayes import GaussianNaiveBayes
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
@@ -9,8 +11,7 @@ import time
 from vgg11 import *
 from evaluation import generate_confusion_matrix_custom, generate_confusion_matrix_sklearn, extract_evaluation_metrics, generate_evaluation_table
 
-
-def train_model_choice(choice, extractor, train_features_pca, train_labels, test_features_pca, test_labels):
+def train_model_choice(choice, train_cnn, test_cnn, train_features_pca, train_labels, test_features_pca, test_labels):
     if choice == '1':
         print("\nStarting the training process (Custom GNB)...")
         gnb = GaussianNaiveBayes()
@@ -113,8 +114,8 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = VGG11().to(device)
         print("\nStarting the training process (CNN/VGG11)...")
-        train_vgg11_model(model, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
+        train_vgg11_model(model, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model, test_cnn, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
         generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11")
         print("CNN/VGG11 Accuracy:", accuracy)
@@ -124,8 +125,8 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         model2 = VGG11().to(device)
         model2.conv_layers = nn.Sequential(*list(model2.conv_layers.children())[:-1])
         print("\nStarting the training process (CNN/VGG11) with -1 layer...")
-        train_vgg11_model(model2, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model2, extractor.test_loader, device)
+        train_vgg11_model(model2, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model2, test_cnn, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
         generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11 with -1 layer")
         print("CNN/VGG11 variant 2 Accuracy:", accuracy)
@@ -140,8 +141,8 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
             nn.ReLU()
         )
         print("\nStarting the training process (CNN/VGG11) with +1 layer...")
-        train_vgg11_model(model3, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model3, extractor.test_loader, device)
+        train_vgg11_model(model3, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model3, test_cnn, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
         generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11 with +1 layer")
         print("CNN/VGG11 variant 3 Accuracy:", accuracy)
@@ -150,8 +151,8 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = VGG11(kernel_size=4).to(device)
         print("\nStarting the training process (CNN/VGG11) with 4 kernel size...")
-        train_vgg11_model(model, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
+        train_vgg11_model(model, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model, test_cnn, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
         generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11 with 4 kernel size")
         print("CNN/VGG11 variant 4 Accuracy:", accuracy)
@@ -160,8 +161,8 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = VGG11(kernel_size=2).to(device)
         print("\nStarting the training process (CNN/VGG11) with 2 kernel size...")
-        train_vgg11_model(model, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
+        train_vgg11_model(model, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model, test_cnn, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
         generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11 with 2 kernel size")
         print("CNN/VGG11 variant 5 Accuracy:", accuracy)
@@ -226,15 +227,15 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         print("\nTraining CNN/VGG11")
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = VGG11().to(device)
-        train_vgg11_model(model, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
+        train_vgg11_model(model, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model, test_cnn, device)
         all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11"))
 
         print("\nTraining CNN/VGG11 with -1 layer")
         model2 = VGG11().to(device)
         model2.conv_layers = nn.Sequential(*list(model2.conv_layers.children())[:-1])
-        train_vgg11_model(model2, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model2, extractor.test_loader, device)
+        train_vgg11_model(model2, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model2, test_cnn, device)
         all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11 with -1 layer"))
 
         print("\nTraining CNN/VGG11 with +1 layer")
@@ -245,20 +246,20 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
             nn.BatchNorm2d(512),
             nn.ReLU()
         )       
-        train_vgg11_model(model3, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model3, extractor.test_loader, device)
+        train_vgg11_model(model3, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model3, test_cnn, device)
         all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11 with +1 layer"))
 
         print("\nTraining CNN/VGG11 with 4 kernel size")
         model4 = VGG11(kernel_size=4).to(device)
-        train_vgg11_model(model4, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model4, extractor.test_loader, device)
+        train_vgg11_model(model4, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model4, test_cnn, device)
         all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11 with 4 kernel size"))
 
         print("\nTraining CNN/VGG11 with 2 kernel size")
         model5 = VGG11(kernel_size=2).to(device)
-        train_vgg11_model(model5, extractor.train_loader, device)
-        predictions, true_labels = predict_vgg11_model(model5, extractor.test_loader, device)
+        train_vgg11_model(model5, train_cnn, device)
+        predictions, true_labels = predict_vgg11_model(model5, test_cnn, device)
         all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11 with 2 kernel size"))
         
 
@@ -269,6 +270,11 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
 def main():
     extractor = FeatureExtractor()
     train_features_pca, train_labels, test_features_pca, test_labels = extractor.get_features_and_labels()
+    
+    train = filter_for_cnn(extractor.train_data, class_limit=500)
+    test = filter_for_cnn(extractor.test_data, class_limit=100)
+    train_cnn = DataLoader(train, batch_size=128, shuffle=True, pin_memory=True)
+    test_cnn = DataLoader(test, batch_size=128, shuffle=False, pin_memory=True)
 
     train_features_pca = np.array(train_features_pca)
     test_features_pca = np.array(test_features_pca)
@@ -300,16 +306,12 @@ def main():
             print("\nExiting...")
             break
 
-        train_model_choice(choice, extractor, train_features_pca, train_labels, test_features_pca, test_labels)
+        train_model_choice(choice, train_cnn, test_cnn, train_features_pca, train_labels, test_features_pca, test_labels)
 
         again = input("\nDo you want to train another model? (y/n): ")
         if again.lower() != 'y':
             print("\nExiting...")
             break
-
-
-if __name__ == "__main__":
-    main()
 
 
 if __name__ == "__main__":

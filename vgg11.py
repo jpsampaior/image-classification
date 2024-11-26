@@ -5,7 +5,7 @@ import numpy as np
 
 
 # Low epoch number because my computer is weak, it takes a lot to run
-def train_vgg11_model(model, train_loader, device, num_epochs=20):
+def train_vgg11_model(model, train_loader, device, num_epochs=10):
     # Using the cross-entropy and sgd as the pdf says
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), momentum=0.9)
