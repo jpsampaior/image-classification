@@ -104,8 +104,7 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         mlp5.predict(test_features_pca)
         mlp_accuracy = mlp5.get_accuracy(test_labels)
         end_time = time.time()
-        generate_confusion_matrix_custom(test_labels, mlp5.predict(test_features_pca),
-                                         "MLP with +512 layers size - 1024 total")
+        generate_confusion_matrix_custom(test_labels, mlp5.predict(test_features_pca), "MLP with +512 layers size - 1024 total")
         print("MLP5 Accuracy:", mlp_accuracy)
         print(f"MLP5 Time (seconds): {end_time - start_time:.2f}")
 
@@ -116,6 +115,7 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         train_vgg11_model(model, extractor.train_loader, device)
         predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11")
         print("CNN/VGG11 Accuracy:", accuracy)
 
     elif choice == '11':
@@ -126,6 +126,7 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         train_vgg11_model(model2, extractor.train_loader, device)
         predictions, true_labels = predict_vgg11_model(model2, extractor.test_loader, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11 with -1 layer")
         print("CNN/VGG11 variant 2 Accuracy:", accuracy)
 
     elif choice == '12':
@@ -141,6 +142,7 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         train_vgg11_model(model3, extractor.train_loader, device)
         predictions, true_labels = predict_vgg11_model(model3, extractor.test_loader, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11 with +1 layer")
         print("CNN/VGG11 variant 3 Accuracy:", accuracy)
 
     elif choice == '13':
@@ -150,6 +152,7 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         train_vgg11_model(model, extractor.train_loader, device)
         predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11 with 4 kernel size")
         print("CNN/VGG11 variant 4 Accuracy:", accuracy)
 
     elif choice == '14':
@@ -159,6 +162,7 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         train_vgg11_model(model, extractor.train_loader, device)
         predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
         accuracy = get_accuracy_vgg11_model(predictions, true_labels)
+        generate_confusion_matrix_custom(true_labels, predictions, "CNN/VGG11 with 2 kernel size")
         print("CNN/VGG11 variant 5 Accuracy:", accuracy)
 
     elif choice == "15":
@@ -217,6 +221,46 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         mlp5.train_model(train_features_pca, train_labels)
         all_evaluation_metrics.append(extract_evaluation_metrics(test_labels, mlp5.predict(test_features_pca),
                                                                  "Multi Layer Perceptron (MLP) with +512 layer size (total 1024)"))
+        
+        print("\nTraining CNN/VGG11")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = VGG11().to(device)
+        train_vgg11_model(model, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model, extractor.test_loader, device)
+        all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11"))
+
+        print("\nTraining CNN/VGG11 with -1 layer")
+        model2 = VGG11().to(device)
+        model2.conv_layers = nn.Sequential(*list(model2.conv_layers.children())[:-1])
+        train_vgg11_model(model2, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model2, extractor.test_loader, device)
+        all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11 with -1 layer"))
+
+        print("\nTraining CNN/VGG11 with +1 layer")
+        model3 = VGG11().to(device)
+        model3.conv_layers = nn.Sequential(
+            *list(model3.conv_layers.children()),
+            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU()
+        )       
+        train_vgg11_model(model3, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model3, extractor.test_loader, device)
+        all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11 with +1 layer"))
+
+        print("\nTraining CNN/VGG11 with 4 kernel size")
+        model4 = VGG11(kernel_size=4).to(device)
+        train_vgg11_model(model4, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model4, extractor.test_loader, device)
+        all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11 with 4 kernel size"))
+
+        print("\nTraining CNN/VGG11 with 2 kernel size")
+        model5 = VGG11(kernel_size=2).to(device)
+        train_vgg11_model(model5, extractor.train_loader, device)
+        predictions, true_labels = predict_vgg11_model(model5, extractor.test_loader, device)
+        all_evaluation_metrics.append(extract_evaluation_metrics(true_labels, predictions, "CNN/VGG11 with 2 kernel size"))
+        
+
 
         generate_evaluation_table(all_evaluation_metrics)
 
@@ -244,8 +288,8 @@ def main():
         print("10. CNN / VGG11 with default configuration")
         print("11. CNN / VGG11 with with -1 layer")
         print("12. CNN / VGG11 with with +1 layer")
-        print("13. CNN / VGG11 with with 2 kernel size")
-        print("14. CNN / VGG11 with with 4 kernel size")
+        print("13. CNN / VGG11 with with 4 kernel size")
+        print("14. CNN / VGG11 with with 2 kernel size")
         print("15. Evaluation section: Train all models and display summary evaluation table (accuracy, precision, "
               "recall, F1-Measure)")
         print("0. Exit")
@@ -261,6 +305,10 @@ def main():
         if again.lower() != 'y':
             print("\nExiting...")
             break
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
