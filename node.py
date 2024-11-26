@@ -1,5 +1,7 @@
 '''
-Node class which serves as the data stucture containing the left and right subtrees, decision function (gini), as well as labels.
+The Node class serves as the data stucture containing the left and right subtrees, decision function (gini), as well as labels.
+
+The node class also contains a function, 'decide' which determines a label for a given feature vector.
 '''
 class Node:
     def __init__(self, left, right, decision_function, label=None):
