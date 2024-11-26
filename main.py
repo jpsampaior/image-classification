@@ -26,6 +26,7 @@ def train_model_choice(choice, extractor, train_features_pca, train_labels, test
         sklearn_gnb.fit(train_features_pca, train_labels)
         sklearn_test_predictions = sklearn_gnb.predict(test_features_pca)
         sklearn_accuracy = accuracy_score(test_labels, sklearn_test_predictions)
+        print("Please close the visualization in order to coninue")
         generate_confusion_matrix_sklearn(test_labels, sklearn_gnb.predict(test_features_pca), "Scikit GNB")
         print("Scikit-learn Naive Bayes Accuracy:", sklearn_accuracy)
 
